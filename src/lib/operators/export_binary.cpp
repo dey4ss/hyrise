@@ -10,6 +10,7 @@
 #include "storage/dictionary_segment.hpp"
 #include "storage/reference_segment.hpp"
 #include "storage/segment_iterate.hpp"
+#include "storage/run_length_segment.hpp"
 #include "storage/vector_compression/compressed_vector_type.hpp"
 #include "storage/vector_compression/fixed_size_byte_aligned/fixed_size_byte_aligned_utils.hpp"
 #include "storage/vector_compression/fixed_size_byte_aligned/fixed_size_byte_aligned_vector.hpp"
@@ -246,6 +247,7 @@ void ExportBinary::ExportBinaryVisitor<T>::handle_segment(const BaseDictionarySe
                                                           std::shared_ptr<SegmentVisitorContext> base_context) {
   auto context = std::static_pointer_cast<ExportContext>(base_context);
 
+
   Assert(base_segment.compressed_vector_type(),
          "Expected DictionarySegment to use vector compression for attribute vector");
   Assert(is_fixed_size_byte_aligned(*base_segment.compressed_vector_type()),
@@ -286,15 +288,29 @@ void ExportBinary::ExportBinaryVisitor<T>::handle_segment(const BaseDictionarySe
   }
 
   // Write attribute vector
+  std::cout << static_cast<unsigned int>(base_segment.compressed_vector_type().value()) << std::endl;
   Assert(base_segment.compressed_vector_type(),
          "Expected DictionarySegment to use vector compression for attribute vector");
   _export_attribute_vector(context->ofstream, *base_segment.compressed_vector_type(), *base_segment.attribute_vector());
 }
 
 template <typename T>
+template <typename K>
+void ExportBinary::ExportBinaryVisitor<T>::handle_segment(const RunLengthSegment<K>& base_segment,
+        std::shared_ptr<SegmentVisitorContext> base_context) {
+    auto context = std::static_pointer_cast<ExportContext>(base_context);
+    export_value(context->ofstream, static_cast<uint32_t>(base_segment.values()->size()));
+    export_values(context->ofstream, base_segment.values());
+    export_value(context->ofstream, static_cast<uint32_t>(base_segment.end_positions()->size()));
+    export_values(context->ofstream, base_segment.end_positions());
+    export_values(context->ofstream, base_segment.null_values());
+}
+
+
+template <typename T>
 void ExportBinary::ExportBinaryVisitor<T>::handle_segment(const BaseEncodedSegment& base_segment,
                                                           std::shared_ptr<SegmentVisitorContext> base_context) {
-  Fail("Binary export not implemented yet for encoded segments.");
+    Fail("Binary export not implemented yet for encoded segments.");
 }
 
 template <typename T>

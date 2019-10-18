@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "run_length_segment.hpp"
 
 namespace opossum {
 

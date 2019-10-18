@@ -9,6 +9,7 @@
 #include "storage/abstract_segment_visitor.hpp"
 #include "storage/reference_segment.hpp"
 #include "storage/value_segment.hpp"
+#include "storage/run_length_segment.hpp"
 #include "utils/assert.hpp"
 
 namespace opossum {
@@ -166,6 +167,9 @@ class ExportBinary::ExportBinaryVisitor : public AbstractSegmentVisitor {
 
   void handle_segment(const BaseEncodedSegment& base_segment,
                       std::shared_ptr<SegmentVisitorContext> base_context) override;
+
+  template <typename K>
+  void handle_segment(const RunLengthSegment<K>& segment, std::shared_ptr<SegmentVisitorContext> context);
 
  private:
   // Chooses the right FixedSizeByteAlignedVector depending on the attribute_vector_width and exports it.
